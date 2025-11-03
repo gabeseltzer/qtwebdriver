@@ -283,16 +283,23 @@ DefaultRouteTable::DefaultRouteTable()
     Add<ActiveElementCommand>           (CommandRoutes::kGetActiveElement);
     Add<WindowHandleCommand>            (CommandRoutes::kGetCurrentWindowHandle);
     Add<WindowHandlesCommand>           (CommandRoutes::kGetWindowHandles);
+    Add<WindowHandlesCommand>           (CommandRoutes::kGetWindowHandlesW3C);  // W3C alias
     Add<WindowCommand>                  (CommandRoutes::kWindowCmd);
     Add<SourceCommand>                  (CommandRoutes::kGetPageSource);
     Add<URLCommand>                     (CommandRoutes::kUrlCmd);
     Add<ExecuteCommand>                 (CommandRoutes::kExecuteScript);
+    Add<ExecuteCommand>                 (CommandRoutes::kExecuteScriptW3C);  // W3C alias
     Add<ExecuteAsyncScriptCommand>      (CommandRoutes::kExecuteAsyncScript);
+    Add<ExecuteAsyncScriptCommand>      (CommandRoutes::kExecuteAsyncScriptW3C);  // W3C alias
     Add<AppCacheStatusCommand>          (CommandRoutes::kGetAppCache);
     Add<BrowserConnectionCommand>       (CommandRoutes::kBrowserConnection);
     Add<AlertTextCommand>               (CommandRoutes::kAlertText);
+    Add<AlertTextCommand>               (CommandRoutes::kAlertTextW3C);  // W3C alias
     Add<AcceptAlertCommand>             (CommandRoutes::kAcceptAlert);
+    Add<AcceptAlertCommand>             (CommandRoutes::kAcceptAlertW3C);  // W3C alias
     Add<DismissAlertCommand>            (CommandRoutes::kDismissAlert);
+    Add<DismissAlertCommand>            (CommandRoutes::kDismissAlertW3C);  // W3C alias
+    Add<WindowMaximizeCommand>          (CommandRoutes::kMaximizeWindowW3C);  // W3C alias
     Add<CookieCommand>                  (CommandRoutes::kCookie);
     Add<NamedCookieCommand>             (CommandRoutes::kNamedCookie);
     Add<LocalStorageCommand>            (CommandRoutes::kLocalStorage);

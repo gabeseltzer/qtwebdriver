@@ -28,6 +28,34 @@ bool SetTimeoutCommand::DoesPost() const {
 }
 
 void SetTimeoutCommand::ExecutePost(Response* const response) {
+    // W3C WebDriver uses different parameter names than JSONWire
+    // W3C: { "script": ms, "pageLoad": ms, "implicit": ms }
+    // JSONWire: { "ms": value, "type": "implicit"|"script"|"page load" }
+    
+    // Try W3C format first
+    int script_timeout = -1;
+    int page_load_timeout = -1;
+    int implicit_timeout = -1;
+    
+    bool has_script = GetIntegerParameter("script", &script_timeout);
+    bool has_page_load = GetIntegerParameter("pageLoad", &page_load_timeout);
+    bool has_implicit = GetIntegerParameter("implicit", &implicit_timeout);
+    
+    if (has_script || has_page_load || has_implicit) {
+        // W3C format detected
+        if (has_script && script_timeout >= 0) {
+            session_->set_async_script_timeout(script_timeout);
+        }
+        if (has_page_load && page_load_timeout >= 0) {
+            session_->set_page_load_timeout(page_load_timeout);
+        }
+        if (has_implicit && implicit_timeout >= 0) {
+            session_->set_implicit_wait(implicit_timeout);
+        }
+        return;
+    }
+    
+    // Fall back to JSONWire format
     // Timeout value in milliseconds
     const char kTimeoutMsKey[] = "ms";
 

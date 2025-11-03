@@ -78,16 +78,23 @@ bool CommandRoutes::IsStandardRoute(const std::string& pattern) {
 		standardCommandRoutes.insert(kGetActiveElement);
 		standardCommandRoutes.insert(kGetCurrentWindowHandle);
 		standardCommandRoutes.insert(kGetWindowHandles);
+		standardCommandRoutes.insert(kGetWindowHandlesW3C);  // W3C WebDriver
 		standardCommandRoutes.insert(kWindowCmd);
 		standardCommandRoutes.insert(kGetPageSource);
 		standardCommandRoutes.insert(kUrlCmd);
 		standardCommandRoutes.insert(kExecuteScript);
+		standardCommandRoutes.insert(kExecuteScriptW3C);  // W3C WebDriver
 		standardCommandRoutes.insert(kExecuteAsyncScript);
+		standardCommandRoutes.insert(kExecuteAsyncScriptW3C);  // W3C WebDriver
 		standardCommandRoutes.insert(kGetAppCache);
 		standardCommandRoutes.insert(kBrowserConnection);
 		standardCommandRoutes.insert(kAlertText);
+		standardCommandRoutes.insert(kAlertTextW3C);  // W3C WebDriver
 		standardCommandRoutes.insert(kAcceptAlert);
+		standardCommandRoutes.insert(kAcceptAlertW3C);  // W3C WebDriver
 		standardCommandRoutes.insert(kDismissAlert);
+		standardCommandRoutes.insert(kDismissAlertW3C);  // W3C WebDriver
+		standardCommandRoutes.insert(kMaximizeWindowW3C);  // W3C WebDriver
 		standardCommandRoutes.insert(kCookie);
 		standardCommandRoutes.insert(kNamedCookie);
 		standardCommandRoutes.insert(kLocalStorage);
@@ -169,16 +176,23 @@ const char CommandRoutes::kSwitchToFrame[] 				= "/session/*/frame";
 const char CommandRoutes::kGetActiveElement[] 			= "/session/*/element/active";
 const char CommandRoutes::kGetCurrentWindowHandle[]		= "/session/*/window_handle";
 const char CommandRoutes::kGetWindowHandles[] 			= "/session/*/window_handles";
+const char CommandRoutes::kGetWindowHandlesW3C[] 		= "/session/*/window/handles";  // W3C WebDriver
 const char CommandRoutes::kWindowCmd[] 					= "/session/*/window";
 const char CommandRoutes::kGetPageSource[] 				= "/session/*/source";
 const char CommandRoutes::kUrlCmd[] 					= "/session/*/url";
 const char CommandRoutes::kExecuteScript[] 				= "/session/*/execute";
+const char CommandRoutes::kExecuteScriptW3C[] 			= "/session/*/execute/sync";  // W3C WebDriver
 const char CommandRoutes::kExecuteAsyncScript[] 		= "/session/*/execute_async";
+const char CommandRoutes::kExecuteAsyncScriptW3C[] 		= "/session/*/execute/async";  // W3C WebDriver
 const char CommandRoutes::kGetAppCache[] 				= "/session/*/application_cache/status";
 const char CommandRoutes::kBrowserConnection[]			= "/session/*/browser_connection";
 const char CommandRoutes::kAlertText[] 					= "/session/*/alert_text";
+const char CommandRoutes::kAlertTextW3C[] 				= "/session/*/alert/text";  // W3C WebDriver
 const char CommandRoutes::kAcceptAlert[] 				= "/session/*/accept_alert";
+const char CommandRoutes::kAcceptAlertW3C[] 			= "/session/*/alert/accept";  // W3C WebDriver
 const char CommandRoutes::kDismissAlert[] 				= "/session/*/dismiss_alert";
+const char CommandRoutes::kDismissAlertW3C[] 			= "/session/*/alert/dismiss";  // W3C WebDriver
+const char CommandRoutes::kMaximizeWindowW3C[] 			= "/session/*/window/maximize";  // W3C WebDriver
 const char CommandRoutes::kCookie[] 					= "/session/*/cookie";
 const char CommandRoutes::kNamedCookie[] 				= "/session/*/cookie/*";
 const char CommandRoutes::kLocalStorage[] 				= "/session/*/local_storage";
