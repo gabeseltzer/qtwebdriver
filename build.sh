@@ -32,7 +32,7 @@ OUT_SHARED_LIB_FILES="libchromium_base.so libWebDriver_core.so libWebDriver_exte
 OUT_BIN_FILES="WebDriver WebDriver_noWebkit WebDriver_noWebkit_sharedLibs"
 
 #generate wdversion.cc
-python generate_wdversion.py
+python3 generate_wdversion.py
 
 for platform in $platforms
 do
