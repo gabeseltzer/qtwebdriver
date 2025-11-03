@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>QtWebDriver Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .button-container {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            border: 2px solid #007bff;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            min-height: 50px;
+        }
+        .input-container {
+            margin: 20px 0;
+        }
+        input[type="text"] {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            width: 300px;
+        }
+        .counter {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>QtWebDriver Test Page</h1>
+    
+    <div class="button-container">
+        <h2>Simple Buttons</h2>
+        <button id="btn-hello" onclick="showMessage('Hello from QtWebDriver!')">Say Hello</button>
+        <button id="btn-goodbye" onclick="showMessage('Goodbye!')">Say Goodbye</button>
+        <button id="btn-clear" onclick="clearMessage()">Clear Message</button>
+    </div>
+    
+    <div class="button-container">
+        <h2>Counter</h2>
+        <div class="counter" id="counter">0</div>
+        <button id="btn-increment" onclick="incrementCounter()">Increment (+1)</button>
+        <button id="btn-decrement" onclick="decrementCounter()">Decrement (-1)</button>
+        <button id="btn-reset" onclick="resetCounter()">Reset Counter</button>
+    </div>
+    
+    <div class="input-container">
+        <h2>Text Input</h2>
+        <input type="text" id="text-input" placeholder="Enter some text here...">
+        <button id="btn-submit" onclick="submitText()">Submit Text</button>
+    </div>
+    
+    <div id="result">
+        <strong>Result:</strong> <span id="result-text">No actions yet</span>
+    </div>
+
+    <script>
+        let counter = 0;
+        
+        function showMessage(message) {
+            document.getElementById('result-text').textContent = message;
+        }
+        
+        function clearMessage() {
+            document.getElementById('result-text').textContent = 'Message cleared';
+        }
+        
+        function incrementCounter() {
+            counter++;
+            document.getElementById('counter').textContent = counter;
+            showMessage('Counter incremented to ' + counter);
+        }
+        
+        function decrementCounter() {
+            counter--;
+            document.getElementById('counter').textContent = counter;
+            showMessage('Counter decremented to ' + counter);
+        }
+        
+        function resetCounter() {
+            counter = 0;
+            document.getElementById('counter').textContent = counter;
+            showMessage('Counter reset to 0');
+        }
+        
+        function submitText() {
+            const text = document.getElementById('text-input').value;
+            if (text) {
+                showMessage('You submitted: ' + text);
+            } else {
+                showMessage('No text entered!');
+            }
+        }
+    </script>
+</body>
+</html>
