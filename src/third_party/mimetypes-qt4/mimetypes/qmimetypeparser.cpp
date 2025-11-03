@@ -110,7 +110,7 @@ static const char matchMaskAttributeC[] = "mask";
     Overwrite to process the sequence of parsed data
 */
 
-QMimeTypeParserBase::ParseState QMimeTypeParserBase::nextState(ParseState currentState, const QStringRef &startElement)
+QMimeTypeParserBase::ParseState QMimeTypeParserBase::nextState(ParseState currentState, const QStringRefCompat &startElement)
 {
     switch (currentState) {
     case ParseBeginning:
@@ -314,7 +314,7 @@ bool QMimeTypeParserBase::parse(QIODevice *dev, const QString &fileName, QString
         // continue switch QXmlStreamReader::Token...
         case QXmlStreamReader::EndElement: // Finished element
         {
-            const QStringRef elementName = reader.name();
+            const QStringRefCompat elementName = reader.name();
             if (elementName == QLatin1String(mimeTypeTagC)) {
                 if (!process(QMimeType(data), errorMessage))
                     return false;

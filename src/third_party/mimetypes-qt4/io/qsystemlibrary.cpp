@@ -117,7 +117,11 @@ HINSTANCE QSystemLibrary::load(const wchar_t *libraryName, bool onlySystemDirect
 
     if (!onlySystemDirectory) {
         const QString PATH(QLatin1String(qgetenv("PATH").constData()));
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+        searchOrder << PATH.split(QLatin1Char(';'), Qt::SkipEmptyParts);
+#else
         searchOrder << PATH.split(QLatin1Char(';'), QString::SkipEmptyParts);
+#endif
     }
     QString fileName = QString::fromWCharArray(libraryName);
     fileName.append(QLatin1String(".dll"));

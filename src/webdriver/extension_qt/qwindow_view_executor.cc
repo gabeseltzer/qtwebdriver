@@ -29,6 +29,12 @@
 #include <QtCore/QDebug>
 #include <QtGui/QGuiApplication>
 #include <QtCore/QDateTime>
+
+// Qt 6 renamed MidButton to MiddleButton
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+#define MidButton MiddleButton
+#endif
+
 #ifdef OS_ANDROID
     #include <QtAndroidExtras/QtAndroidExtras>
     #include <qpa/qplatformnativeinterface.h>
@@ -39,10 +45,20 @@ namespace webdriver {
 
 QWindowViewCmdExecutor::QWindowViewCmdExecutor(Session* session, ViewId viewId)
     : ViewCmdExecutor(session, viewId) {
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+     touchDevice = new QPointingDevice("WebDriver Touch Device", 1, QInputDevice::DeviceType::TouchScreen,
+                                       QPointingDevice::PointerType::Finger,
+                                       QInputDevice::Capability::Position | QInputDevice::Capability::Velocity,
+                                       1, 10);
+#else
      touchDevice.setCapabilities(QTouchDevice::Velocity);
+#endif
 }
 
 QWindowViewCmdExecutor::~QWindowViewCmdExecutor() {
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    delete touchDevice;
+#endif
 };
 
 QWindow* QWindowViewCmdExecutor::getView(const ViewId& viewId, Error** error) {
@@ -107,7 +123,7 @@ void QWindowViewCmdExecutor::SendKeys(const string16& keys, Error** error) {
         return;
 
     std::string err_msg;
-    std::vector<QKeyEvent> key_events;
+    std::vector<QKeyEvent*> key_events;
     int modifiers = session_->get_sticky_modifiers();
 
     if (!QKeyConverter::ConvertKeysToWebKeyEvents(keys,
@@ -123,13 +139,15 @@ void QWindowViewCmdExecutor::SendKeys(const string16& keys, Error** error) {
 
     session_->set_sticky_modifiers(modifiers);
 
-    std::vector<QKeyEvent>::iterator it = key_events.begin();
+    std::vector<QKeyEvent*>::iterator it = key_events.begin();
     while (it != key_events.end()) {
 
-        bool consumed = WDEventDispatcher::getInstance()->dispatch(&(*it));
+        bool consumed = WDEventDispatcher::getInstance()->dispatch(*it);
 
         if (!consumed)
-            QGuiApplication::sendEvent(view, &(*it));
+            QGuiApplication::sendEvent(view, *it);
+        
+        delete *it;
         ++it;
     }
 }
@@ -268,6 +286,12 @@ Qt::MouseButton QWindowViewCmdExecutor::ConvertMouseButtonToQtMouseButton(MouseB
 
 QTouchEvent::TouchPoint QWindowViewCmdExecutor::createTouchPoint(Qt::TouchPointState state, QPointF &point, QVector2D velocity)
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    // Qt 6 touch events have a completely different API
+    // Return a default-constructed event point (touch events won't work properly in Qt 6 yet)
+    QEventPoint touchPoint;
+    return touchPoint;
+#else
     QTouchEvent::TouchPoint touchPoint(1);
     touchPoint.setPos(point);
     touchPoint.setState(state);
@@ -275,16 +299,24 @@ QTouchEvent::TouchPoint QWindowViewCmdExecutor::createTouchPoint(Qt::TouchPointS
 
     touchPoint.setVelocity(velocity);
     return touchPoint;
+#endif
 }
 
 QTouchEvent::TouchPoint QWindowViewCmdExecutor::createTouchPointWithId(Qt::TouchPointState state, QPointF &point, int id)
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    // Qt 6 touch events have a completely different API
+    // Return a default-constructed event point (touch events won't work properly in Qt 6 yet)
+    QEventPoint touchPoint;
+    return touchPoint;
+#else
     QTouchEvent::TouchPoint touchPoint(id);
     touchPoint.setPos(point);
     touchPoint.setState(state);
     touchPoint.setPressure(1);
 
     return touchPoint;
+#endif
 }
 
 QTouchEvent* QWindowViewCmdExecutor::createSimpleTouchEvent(QEvent::Type eventType, Qt::TouchPointStates touchPointStates, QPointF &point, QVector2D velocity)
@@ -323,9 +355,15 @@ QTouchEvent* QWindowViewCmdExecutor::create2PointTouchEvent(QEvent::Type eventTy
 
 QTouchEvent* QWindowViewCmdExecutor::createTouchEvent(QEvent::Type eventType, Qt::TouchPointStates touchPointStates, const QList<QTouchEvent::TouchPoint> &touchPoints)
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    QTouchEvent *touchEvent = new QTouchEvent(eventType, touchDevice, Qt::NoModifier, touchPoints);
+    QDateTime current = QDateTime::currentDateTime();
+    ulong timestame = current.toMSecsSinceEpoch();
+#else
     QTouchEvent *touchEvent = new QTouchEvent(eventType, &touchDevice, Qt::NoModifier, touchPointStates, touchPoints);
     QDateTime current = QDateTime::currentDateTime();
     ulong timestame = current.toMSecsSinceEpoch() & (((qint64)1<<(sizeof(ulong)*8))-1);
+#endif
     touchEvent->setTimestamp(timestame);
     return touchEvent;
 }

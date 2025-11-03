@@ -44,12 +44,17 @@
 
 #include <QtCore/qshareddata.h>
 #include <QtCore/qstring.h>
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+#include <QtCore/qstringlist.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
 class QMimeTypePrivate;
 class QFileinfo;
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
 class QStringList;
+#endif
 
 class QMimeType
 {

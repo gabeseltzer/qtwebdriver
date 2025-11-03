@@ -22,8 +22,17 @@
 
 #include <QtNetwork/QHostAddress>
 #include <QtCore/QMap>
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+#include <QtCore/QRegularExpression>
+#else
 #include <QtCore/QRegExp>
+#endif
 #include <QtCore/QStringList>
+
+// Qt 6 renamed MidButton to MiddleButton
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+#define MidButton MiddleButton
+#endif
 
 #define MAJOR_INDEX 6
 #define MINOR_INDEX 10
@@ -116,7 +125,11 @@ bool VNCClient::Init(QString remoteHost, quint16 port)
 
     if (!addr.setAddress(remoteHost))
     {
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+        remoteHost.replace(QRegularExpression("http*://"), "");
+#else
         remoteHost.replace(QRegExp("http*://"), "");
+#endif
         addr.setAddress(remoteHost);
     }
 
@@ -141,7 +154,11 @@ bool VNCClient::Init(QString remoteHost, quint16 port, QString* password)
 
     if (!addr.setAddress(remoteHost))
     {
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+        remoteHost.replace(QRegularExpression("http*://"), "");
+#else
         remoteHost.replace(QRegExp("http*://"), "");
+#endif
         addr.setAddress(remoteHost);
     }
 

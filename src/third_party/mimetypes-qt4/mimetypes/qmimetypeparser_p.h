@@ -46,6 +46,13 @@
 #include "qmimedatabase_p.h"
 #include "qmimeprovider_p.h"
 
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+#include <QtCore/QStringView>
+#define QStringRefCompat QStringView
+#else
+#define QStringRefCompat QStringRef
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QIODevice;
@@ -84,7 +91,7 @@ private:
         ParseError
     };
 
-    static ParseState nextState(ParseState currentState, const QStringRef &startElement);
+    static ParseState nextState(ParseState currentState, const QStringRefCompat &startElement);
 };
 
 

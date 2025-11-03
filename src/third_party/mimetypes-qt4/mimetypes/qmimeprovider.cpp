@@ -334,7 +334,7 @@ bool QMimeBinaryProvider::matchSuffixTree(QMimeGlobMatchResult &result, QMimeBin
     while (min <= max) {
         const int mid = (min + max) / 2;
         const int off = firstOffset + 12 * mid;
-        const QChar ch = cacheFile->getUint32(off);
+        const QChar ch = QChar(static_cast<ushort>(cacheFile->getUint32(off)));
         if (ch < fileChar)
             min = mid + 1;
         else if (ch > fileChar)
@@ -596,7 +596,7 @@ void QMimeBinaryProvider::loadMimeTypePrivate(QMimeTypePrivate &data)
             }
 
             while (xml.readNextStartElement()) {
-                const QStringRef tag = xml.name();
+                const QStringRefCompat tag = xml.name();
                 if (tag == QLatin1String("comment")) {
                     QString lang = xml.attributes().value(QLatin1String("xml:lang")).toString();
                     const QString text = xml.readElementText();

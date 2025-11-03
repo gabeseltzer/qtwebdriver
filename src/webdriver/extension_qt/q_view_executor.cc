@@ -29,7 +29,14 @@
 #include "extension_qt/wd_event_dispatcher.h"
 
 #include <QtCore/QDebug>
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+#include <QtWidgets/QApplication>
+#include <QtGui/QScreen>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QInputDialog>
+#include <QtCore/QDateTime>
+#include <QtGui/QEventPoint>
+#elif (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QDesktopWidget>
 #include <QtWidgets/QMessageBox>
@@ -51,11 +58,20 @@ namespace webdriver {
 
 QViewCmdExecutor::QViewCmdExecutor(Session* session, ViewId viewId)
     : ViewCmdExecutor(session, viewId) {
-
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    touchDevice = new QPointingDevice("WebDriver Touch Device", 1, QInputDevice::DeviceType::TouchScreen,
+                                      QPointingDevice::PointerType::Finger,
+                                      QInputDevice::Capability::Position,
+                                      1, 10);
+#else
+    touchDevice.setCapabilities(QTouchDevice::Position);
+#endif
 }
 
 QViewCmdExecutor::~QViewCmdExecutor() {
-
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    delete touchDevice;
+#endif
 };
 
 QWidget* QViewCmdExecutor::getView(const ViewId& viewId, Error** error) {
@@ -121,7 +137,13 @@ void QViewCmdExecutor::Maximize(Error** error) {
         return;
     }
 
-    view->setGeometry(QApplication::desktop()->rect());    
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    QScreen *screen = QApplication::primaryScreen();
+    if (screen)
+        view->setGeometry(screen->geometry());
+#else
+    view->setGeometry(QApplication::desktop()->rect());
+#endif    
 }
 
 void QViewCmdExecutor::GetScreenShot(std::string* png, Error** error) {
@@ -169,7 +191,7 @@ void QViewCmdExecutor::SendKeys(const string16& keys, Error** error) {
         return;
 
     std::string err_msg;
-    std::vector<QKeyEvent> key_events;
+    std::vector<QKeyEvent*> key_events;
     int modifiers = session_->get_sticky_modifiers();
 
     if (!QKeyConverter::ConvertKeysToWebKeyEvents(keys,
@@ -185,13 +207,15 @@ void QViewCmdExecutor::SendKeys(const string16& keys, Error** error) {
 
     session_->set_sticky_modifiers(modifiers);
 
-    std::vector<QKeyEvent>::iterator it = key_events.begin();
+    std::vector<QKeyEvent*>::iterator it = key_events.begin();
     while (it != key_events.end()) {
 
-        bool consumed = WDEventDispatcher::getInstance()->dispatch(&(*it));
+        bool consumed = WDEventDispatcher::getInstance()->dispatch(*it);
 
         if (!consumed)
-            qApp->sendEvent(view, &(*it));
+            qApp->sendEvent(view, *it);
+        
+        delete *it;
         ++it;
     }
 }
@@ -367,11 +391,18 @@ void QViewCmdExecutor::GetOrientation(std::string *orientation, Error **error)
 
 QTouchEvent::TouchPoint QViewCmdExecutor::createTouchPoint(Qt::TouchPointState state, QPointF &point)
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    // Qt 6 touch events have a completely different API and require private headers
+    // Return a default-constructed event point (touch events won't work properly in Qt 6 yet)
+    QEventPoint touchPoint;
+    return touchPoint;
+#else
     QTouchEvent::TouchPoint touchPoint(1);
     touchPoint.setPos(point);
     touchPoint.setState(state);
     touchPoint.setPressure(1);
     return touchPoint;
+#endif
 }
 
 QTouchEvent* QViewCmdExecutor::createSimpleTouchEvent(QEvent::Type eventType, Qt::TouchPointStates touchPointStates, QPointF point)
@@ -392,7 +423,12 @@ QTouchEvent* QViewCmdExecutor::createSimpleTouchEvent(QEvent::Type eventType, Qt
 
 QTouchEvent* QViewCmdExecutor::createTouchEvent(QEvent::Type eventType, Qt::TouchPointStates touchPointStates, const QList<QTouchEvent::TouchPoint> &touchPoints)
 {
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    QTouchEvent *touchEvent = new QTouchEvent(eventType, touchDevice, Qt::NoModifier, touchPoints);
+    QDateTime current = QDateTime::currentDateTime();
+    ulong timestame = current.toMSecsSinceEpoch();
+    touchEvent->setTimestamp(timestame);
+#elif (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     QTouchEvent *touchEvent = new QTouchEvent(eventType, &touchDevice, Qt::NoModifier, touchPointStates, touchPoints);
     QDateTime current = QDateTime::currentDateTime();
     ulong timestame = current.toMSecsSinceEpoch() & (((qint64)1<<(sizeof(ulong)*8))-1);
@@ -423,12 +459,19 @@ QTouchEvent* QViewCmdExecutor::create2PointTouchEvent(QEvent::Type eventType, Qt
 
 QTouchEvent::TouchPoint QViewCmdExecutor::createTouchPointWithId(Qt::TouchPointState state, QPointF &point, int id)
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    // Qt 6 touch events have a completely different API and require private headers
+    // Return a default-constructed event point (touch events won't work properly in Qt 6 yet)
+    QEventPoint touchPoint;
+    return touchPoint;
+#else
     QTouchEvent::TouchPoint touchPoint(id);
     touchPoint.setPos(point);
     touchPoint.setState(state);
     touchPoint.setPressure(1);
 
     return touchPoint;
+#endif
 }
 
 } // namespace webdriver     

@@ -57,7 +57,11 @@ Qt::MouseButton QCommonUtil::ConvertMouseButtonToQtMouseButton(MouseButton butto
     switch(button)
     {
         case kLeftButton: result = Qt::LeftButton; break;
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+        case kMiddleButton: result = Qt::MiddleButton; break;
+#else
         case kMiddleButton: result = Qt::MidButton; break;
+#endif
         case kRightButton: result = Qt::RightButton; break;
         default: result = Qt::NoButton;
     }

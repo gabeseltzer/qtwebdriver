@@ -45,6 +45,11 @@
 #include <QtCore/qhash.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qtextstream.h>
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+#include <QtCore/qregularexpression.h>
+#else
+#include <QtCore/qregexp.h>
+#endif
 #include <errno.h>
 #include <stdlib.h>
 
@@ -161,6 +166,15 @@ QString QStandardPaths::writableLocation(StandardLocation type)
         QHash<QString, QString> lines;
         QTextStream stream(&file);
         // Only look for lines like: XDG_DESKTOP_DIR="$HOME/Desktop"
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+        QRegularExpression exp(QLatin1String("^XDG_(.*)_DIR=(.*)$"));
+        while (!stream.atEnd()) {
+            const QString &line = stream.readLine();
+            QRegularExpressionMatch match = exp.match(line);
+            if (match.hasMatch()) {
+                const QString key = match.captured(1);
+                QString value = match.captured(2);
+#else
         QRegExp exp(QLatin1String("^XDG_(.*)_DIR=(.*)$"));
         while (!stream.atEnd()) {
             const QString &line = stream.readLine();
@@ -168,6 +182,7 @@ QString QStandardPaths::writableLocation(StandardLocation type)
                 const QStringList lst = exp.capturedTexts();
                 const QString key = lst.at(1);
                 QString value = lst.at(2);
+#endif
                 if (value.length() > 2
                     && value.startsWith(QLatin1Char('\"'))
                     && value.endsWith(QLatin1Char('\"')))
