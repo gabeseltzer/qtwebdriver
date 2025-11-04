@@ -1,2 +1,0 @@
-# Empty custom commands generated dependencies file for qt6_test_app_autogen.
-# This may be replaced when dependencies are built.

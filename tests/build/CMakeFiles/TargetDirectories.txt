@@ -1,5 +1,0 @@
-/home/runner/work/qtwebdriver/qtwebdriver/tests/build/CMakeFiles/qt6_test_app.dir
-/home/runner/work/qtwebdriver/qtwebdriver/tests/build/CMakeFiles/edit_cache.dir
-/home/runner/work/qtwebdriver/qtwebdriver/tests/build/CMakeFiles/rebuild_cache.dir
-/home/runner/work/qtwebdriver/qtwebdriver/tests/build/CMakeFiles/qt6_test_app_autogen_timestamp_deps.dir
-/home/runner/work/qtwebdriver/qtwebdriver/tests/build/CMakeFiles/qt6_test_app_autogen.dir
