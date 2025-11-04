@@ -74,10 +74,11 @@ Test script for web-based UI (requires QtWebEngine). Tests:
 
 **Note:** Requires a Qt application with WebEngine/WebKit support.
 
-## Qt Application
+## Qt Applications
 
-### `test_qt_app.cpp`
-Standalone Qt 6.8.2 Widgets application with interactive UI:
+### Qt 6 Test Application (`qt6_test_app.cpp`)
+
+**NEW**: Standalone Qt 6 Widgets application for testing QtWebDriver with Qt 6:
 - **Simple Buttons**: Say Hello, Say Goodbye, Clear Message
 - **Counter**: Increment, Decrement, Reset with display
 - **Text Input**: Line edit with submit button
@@ -85,14 +86,62 @@ Standalone Qt 6.8.2 Widgets application with interactive UI:
 
 All widgets are named with `objectName` for WebDriver automation.
 
+**Building:**
+```bash
+cd tests
+./build_qt6_app.sh
+```
+
+**Running (standalone mode):**
+```bash
+# The app runs standalone without embedding QtWebDriver
+cd tests/build
+./qt6_test_app
+```
+
+**Using with QtWebDriver (separate process - recommended):**
+```bash
+# Terminal 1: Start QtWebDriver server
+cd out/desktop/release/Default
+./WebDriver --port=9517
+
+# Terminal 2: Run Qt 6 test app
+cd tests/build
+./qt6_test_app
+
+# Terminal 3: Run test scripts
+python tests/test_qt_widgets.py
+```
+
+See [QT6_SUPPORT.md](../QT6_SUPPORT.md) for more details on Qt 6 support.
+
+---
+
+### Legacy Qt Test Application (`test_qt_app.cpp`)
+
+Older Qt test application (for Qt 6.8.2 with embedding attempts):
+- **Simple Buttons**: Say Hello, Say Goodbye, Clear Message
+- **Counter**: Increment, Decrement, Reset with display
+- **Text Input**: Line edit with submit button
+- **Result Display**: Shows action results
+
+**Note:** This version attempts to embed QtWebDriver directly, which has known compatibility issues with Qt 6 (see tests/QT6_INTEGRATION_FINDINGS.md). Use the standalone `qt6_test_app.cpp` instead.
+
 ### Building the Qt App
 
+**For Qt 6 (recommended):**
 ```bash
-cd /workspaces/qtwebdriver/tests
+cd tests
+./build_qt6_app.sh
+```
+
+**For legacy Qt versions:**
+```bash
+cd tests
 ./build_test_app.sh
 ```
 
-This creates the `test_qt_app` binary.
+This creates the Qt test application binary.
 
 ### Running with QtWebDriver
 
@@ -129,9 +178,15 @@ pip install selenium
 ### WebDriver Server
 QtWebDriver must be built and running on port 9517 (default).
 
-### Qt 6.8.2
-Required for building and running the Qt test application.
-Location: `/opt/qt/6.8.2/gcc_64`
+### Qt 6 Support
+Required for building and running the Qt 6 test application.
+
+For Ubuntu/Debian:
+```bash
+sudo apt-get install qt6-base-dev cmake
+```
+
+For other platforms, see [QT6_SUPPORT.md](../QT6_SUPPORT.md)
 
 ## Test Results
 
