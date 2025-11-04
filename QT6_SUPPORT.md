@@ -76,7 +76,59 @@ All widgets have object names set for easy WebDriver automation:
 
 ## Usage with Qt 6 Applications
 
-### Option 1: Separate Process (Recommended)
+### Option 1: Embedded QtWebDriver (Following Wiki Approach)
+
+Embed QtWebDriver directly into your Qt 6 application following the [QtWebDriver wiki](https://github.com/cisco-open-source/qtwebdriver/wiki/Use-QtWebDriver-to-run-your-application):
+
+**Prerequisites:**
+1. Build QtWebDriver with Qt 6 support:
+   ```bash
+   cp qt6_sample_config.gypi wd_config.gypi
+   # Edit wd_config.gypi with your Qt 6 paths
+   ./build.sh
+   ```
+
+2. Include QtWebDriver headers in your application:
+   ```cpp
+   // Include ALL Qt headers FIRST
+   #include <QApplication>
+   #include <QMainWindow>
+   // ... other Qt headers
+   
+   // THEN include QtWebDriver headers
+   #include "wd_core_only.h"
+   ```
+
+3. Initialize QtWebDriver in main():
+   ```cpp
+   int main(int argc, char *argv[]) {
+       base::AtExitManager exit;
+       
+       QApplication app(argc, argv);
+       app.setQuitOnLastWindowClosed(false);
+       
+       // Initialize QtWebDriver
+       wd_helpers::setup(argc, argv);
+       
+       // Your application code
+       return app.exec();
+   }
+   ```
+
+4. Build and link:
+   ```bash
+   cd tests
+   ./build_qt6_app_embedded.sh
+   ```
+
+5. Run:
+   ```bash
+   ./qt6_test_app_embedded --port=9517
+   ```
+
+**Note:** With C++17 enabled in the build system, the header conflicts mentioned in earlier findings are mitigated. However, if you encounter build issues, see `tests/QT6_INTEGRATION_FINDINGS.md` for details.
+
+### Option 2: Separate Process (Alternative)
 
 Run QtWebDriver as a separate process and connect to your Qt 6 application:
 
@@ -89,9 +141,9 @@ Run QtWebDriver as a separate process and connect to your Qt 6 application:
 
 3. Connect via Selenium/WebDriver client
 
-This approach avoids potential header conflicts and is the most reliable method.
+This approach avoids potential header conflicts and is simpler for applications that don't need tight integration.
 
-### Option 2: Registration Approach
+### Option 3: Registration Approach
 
 Register your Qt 6 widget class with QtWebDriver and let WebDriver create the application instance.
 See the QtWebDriver wiki for details on this approach.
@@ -102,13 +154,19 @@ See the QtWebDriver wiki for details on this approach.
 
 QtWebKit is not available in Qt 6. Set `WD_CONFIG_WEBKIT: '0'` in your configuration.
 
-### Embedding QtWebDriver (Not Recommended)
+### Embedding Considerations
 
-Directly embedding QtWebDriver into Qt 6 applications may encounter header conflicts between:
-- QtWebDriver's Chromium base library (C++11/C++17)
-- Qt 6's automatic inclusion of `<chrono>` headers
+The Qt 6 test application (`qt6_test_app.cpp`) demonstrates the embedded approach following the wiki instructions. With C++17 enabled (`-std=gnu++17` in `wd_build_options.gypi`), many of the header conflicts are resolved.
 
-For this reason, we recommend using the separate process approach (Option 1) or the registration approach (Option 2).
+**Build requirements for embedding:**
+- QtWebDriver must be built first with Qt 6 support
+- Use the provided `build_qt6_app_embedded.sh` script
+- Link against: `libWebDriver_core.a`, `libWebDriver_extension_qt_base.a`, `libchromium_base.a`
+
+If you encounter compilation issues, you may need to:
+- Ensure Qt headers are included before QtWebDriver headers
+- Use the workarounds documented in `tests/QT6_INTEGRATION_FINDINGS.md`
+- Or fall back to the separate process approach (Option 2)
 
 ## Compatibility Notes
 

@@ -1,11 +1,13 @@
 /****************************************************************************
 **
-** Simple Qt 6 Test Application (Standalone - No QtWebDriver Embedding)
+** Qt 6 Test Application with Embedded QtWebDriver
 **
-** This application can be tested with QtWebDriver running as a separate process.
+** This application embeds QtWebDriver server following the wiki approach:
+** https://github.com/cisco-open-source/qtwebdriver/wiki/Use-QtWebDriver-to-run-your-application
 **
 ****************************************************************************/
 
+// CRITICAL: Include ALL Qt headers FIRST, before any WebDriver headers!
 #include <QApplication>
 #include <QMainWindow>
 #include <QPushButton>
@@ -16,6 +18,9 @@
 #include <QWidget>
 #include <QGroupBox>
 #include <QFont>
+
+// NOW include QtWebDriver headers (after all Qt headers!)
+#include "wd_core_only.h"
 
 class TestWindow : public QMainWindow {
     Q_OBJECT
@@ -186,11 +191,19 @@ private:
 };
 
 int main(int argc, char *argv[]) {
+    // Initialize QtWebDriver before creating QApplication
+    base::AtExitManager exit;
+    
     QApplication app(argc, argv);
+    app.setQuitOnLastWindowClosed(false);
     
     // Set application name for QtWebDriver to find
     app.setApplicationName("QtWebDriverQt6TestApp");
     app.setOrganizationName("QtWebDriver");
+
+    // Initialize QtWebDriver server (embedded mode)
+    // This starts the WebDriver server in the same process
+    wd_helpers::setup(argc, argv);
 
     TestWindow window;
     window.show();

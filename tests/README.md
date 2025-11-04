@@ -78,7 +78,8 @@ Test script for web-based UI (requires QtWebEngine). Tests:
 
 ### Qt 6 Test Application (`qt6_test_app.cpp`)
 
-**NEW**: Standalone Qt 6 Widgets application for testing QtWebDriver with Qt 6:
+Qt 6 Widgets application with **embedded QtWebDriver** support following the [wiki approach](https://github.com/cisco-open-source/qtwebdriver/wiki/Use-QtWebDriver-to-run-your-application):
+
 - **Simple Buttons**: Say Hello, Say Goodbye, Clear Message
 - **Counter**: Increment, Decrement, Reset with display
 - **Text Input**: Line edit with submit button
@@ -86,7 +87,29 @@ Test script for web-based UI (requires QtWebEngine). Tests:
 
 All widgets are named with `objectName` for WebDriver automation.
 
-**Building:**
+**Building (embedded mode):**
+```bash
+# First, build QtWebDriver with Qt 6 support
+cp qt6_sample_config.gypi wd_config.gypi
+# Edit wd_config.gypi with your Qt 6 paths
+./build.sh
+
+# Then build the test app with embedded QtWebDriver
+cd tests
+./build_qt6_app_embedded.sh
+```
+
+**Running (embedded mode):**
+```bash
+# QtWebDriver server runs in the same process
+cd tests
+./qt6_test_app_embedded --port=9517
+
+# Connect with Selenium/WebDriver clients on port 9517
+python test_qt_widgets.py
+```
+
+**Building (standalone mode - for separate process approach):**
 ```bash
 cd tests
 ./build_qt6_app.sh
@@ -94,14 +117,7 @@ cd tests
 
 **Running (standalone mode):**
 ```bash
-# The app runs standalone without embedding QtWebDriver
-cd tests/build
-./qt6_test_app
-```
-
-**Using with QtWebDriver (separate process - recommended):**
-```bash
-# Terminal 1: Start QtWebDriver server
+# Terminal 1: Start QtWebDriver server separately
 cd out/desktop/release/Default
 ./WebDriver --port=9517
 
@@ -113,23 +129,33 @@ cd tests/build
 python tests/test_qt_widgets.py
 ```
 
-See [QT6_SUPPORT.md](../QT6_SUPPORT.md) for more details on Qt 6 support.
+See [QT6_SUPPORT.md](../QT6_SUPPORT.md) for more details on Qt 6 support and embedding approaches.
 
 ---
 
 ### Legacy Qt Test Application (`test_qt_app.cpp`)
 
-Older Qt test application (for Qt 6.8.2 with embedding attempts):
+Older Qt test application with embedding support (for Qt 4/5):
 - **Simple Buttons**: Say Hello, Say Goodbye, Clear Message
 - **Counter**: Increment, Decrement, Reset with display
 - **Text Input**: Line edit with submit button
 - **Result Display**: Shows action results
 
-**Note:** This version attempts to embed QtWebDriver directly, which has known compatibility issues with Qt 6 (see tests/QT6_INTEGRATION_FINDINGS.md). Use the standalone `qt6_test_app.cpp` instead.
-
 ### Building the Qt App
 
-**For Qt 6 (recommended):**
+**For Qt 6 with embedded QtWebDriver (following wiki):**
+```bash
+# First build QtWebDriver
+cp qt6_sample_config.gypi wd_config.gypi
+# Edit wd_config.gypi with your Qt 6 paths
+./build.sh
+
+# Then build embedded test app
+cd tests
+./build_qt6_app_embedded.sh
+```
+
+**For Qt 6 standalone (separate process approach):**
 ```bash
 cd tests
 ./build_qt6_app.sh
