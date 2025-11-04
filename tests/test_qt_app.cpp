@@ -4,6 +4,7 @@
 **
 ****************************************************************************/
 
+// CRITICAL: Include ALL Qt headers FIRST, before any WebDriver headers!
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QPushButton>
@@ -14,6 +15,9 @@
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QGroupBox>
 #include <QFont>
+
+// NOW include QtWebDriver headers (after all Qt headers!)
+#include "wd_core_only.h"
 
 class TestWindow : public QMainWindow {
     Q_OBJECT
@@ -184,11 +188,19 @@ private:
 };
 
 int main(int argc, char *argv[]) {
+    // Initialize QtWebDriver before creating QApplication
+    base::AtExitManager exit;
+    
     QApplication app(argc, argv);
+    app.setQuitOnLastWindowClosed(false);
     
     // Set application name for QtWebDriver to find
     app.setApplicationName("QtWebDriverTestApp");
     app.setOrganizationName("QtWebDriver");
+
+    // Initialize QtWebDriver server (embedded mode)
+    // This starts the WebDriver server in the same process
+    wd_helpers::setup(argc, argv);
 
     TestWindow window;
     window.setWindowTitle("QtWebDriver Test Application");
