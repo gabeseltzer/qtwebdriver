@@ -11,7 +11,10 @@ namespace {
 
 // Special dictionary key to identify an element ID to WebDriver atoms and
 // remote clients.
-const char kWebElementKey[] = "ELEMENT";
+// W3C WebDriver standard key (Selenium 4+)
+const char kW3CWebElementKey[] = "element-6066-11e4-a52e-4f735466cecf";
+// Legacy JSONWire protocol key (Selenium 3 and older)
+const char kLegacyWebElementKey[] = "ELEMENT";
 
 }  // namespace
 
@@ -33,8 +36,10 @@ ElementId::ElementId(const std::string& id) : id_(id), is_valid_(true) {}
 ElementId::ElementId(const Value* value) {
     is_valid_ = false;
     if (value->IsType(Value::TYPE_DICTIONARY)) {
-        is_valid_ = static_cast<const DictionaryValue*>(value)->
-            GetString(kWebElementKey, &id_);
+        const DictionaryValue* dict = static_cast<const DictionaryValue*>(value);
+        // Try W3C key first, then fall back to legacy key for backwards compatibility
+        is_valid_ = dict->GetString(kW3CWebElementKey, &id_) ||
+                    dict->GetString(kLegacyWebElementKey, &id_);
     }
 }
 
@@ -45,7 +50,10 @@ Value* ElementId::ToValue() const {
     if (id_.empty())
         return Value::CreateNullValue();
     DictionaryValue* element = new DictionaryValue();
-    element->SetString(kWebElementKey, id_);
+    // Use W3C standard key for Selenium 4+ compatibility
+    element->SetString(kW3CWebElementKey, id_);
+    // Also include legacy key for backwards compatibility with Selenium 3
+    element->SetString(kLegacyWebElementKey, id_);
     return element;
 }
 
