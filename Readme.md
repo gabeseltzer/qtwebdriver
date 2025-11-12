@@ -11,8 +11,33 @@ If you hadn't used Selenium for automated testing, you may also find this links 
 * http://docs.seleniumhq.org/  
 
 # Build and run
-* The build instructions are detailed in the wiki: https://github.com/cisco-open-source/qtwebdriver/wiki/Build-And-Run
-* Release notes and pre-built binaries are in the Releases section: https://github.com/cisco-open-source/qtwebdriver/releases
+
+QtWebDriver now uses **CMake** as its build system (migrated from GYP in November 2025).
+
+## Quick Start
+
+```bash
+# Basic build with Qt6
+./build.sh
+
+# Or specify parameters: [output_dir] [platform] [build_type] [qt_path]
+./build.sh out desktop release /opt/qt/6.8.2/gcc_64
+
+# For Qt5
+./build.sh out desktop release /opt/Qt5/5.15.2/gcc_64
+```
+
+## Platform-Specific Builds
+
+- **Linux/Desktop**: `./build.sh`
+- **macOS**: `./build_mac.sh`
+- **iOS**: `./build_ios.sh`
+- **Android**: `./build_android.sh`
+
+## Documentation
+
+- **CMake Build Guide**: See [CMAKE_BUILD.md](CMAKE_BUILD.md) for complete CMake build documentation
+- **Release Notes**: Pre-built binaries are in the Releases section: https://github.com/cisco-open-source/qtwebdriver/releases
 
 # Other links
 * An example how to customize QtWebDriver in `src/Test/main.cc`   

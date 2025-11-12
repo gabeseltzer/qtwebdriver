@@ -1,40 +1,61 @@
 #!/bin/sh
 
-export QT_DIR=/usr/local/opt/qt5_ios
+# QtWebDriver iOS CMake Build Script
+# This script has been updated to use CMake instead of GYP
+
+export QT_DIR=${QT_DIR:-/usr/local/opt/qt6_ios}
 export PATH=$QT_DIR/bin:$PATH
 
-cat > wd.gypi <<EOF
-{
-  'variables': 
-  {
-    'QT5': '1',
-    'QT_BIN_PATH':       '${QT_DIR}/bin',
-    'QT_INC_PATH':       '${QT_DIR}/include',
-    'QT_LIB_PATH':       '${QT_DIR}/lib',
-    'WD_CONFIG_WEBKIT':  '0',
-    'WD_CONFIG_QUICK':   '1',
-    'WD_CONFIG_PLAYER':  '1',
-    'WD_BUILD_MONGOOSE': '1',
-  },
-}
-EOF
+echo "Generating version info..."
+python3 generate_wdversion.py
 
-python generate_wdversion.py
+# Create build directory
+BUILD_DIR="out/ios/release"
+mkdir -p "$BUILD_DIR"
 
-gyp --depth . -G output_dir=. -D platform=desktop -D mode=debug -f xcode -D OS=ios --generator-output=out/ wd.gyp
+echo "Configuring with CMake for iOS..."
+cd "$BUILD_DIR" || exit 1
 
-if [ "$1" == "-all" ]
-then
+cmake ../../.. \
+    -G Xcode \
+    -DCMAKE_SYSTEM_NAME=iOS \
+    -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
+    -DCMAKE_OSX_ARCHITECTURES=arm64 \
+    -DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO \
+    -DCMAKE_IOS_INSTALL_COMBINED=YES \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DQT_VERSION=6 \
+    -DCMAKE_PREFIX_PATH="$QT_DIR" \
+    -DWD_CONFIG_WEBKIT=OFF \
+    -DWD_CONFIG_QUICK=ON \
+    -DIOS=ON
 
-#xcodebuild -project out/wd_test.xcodeproj -target test_ios_WD -arch i386 -sdk iphonesimulator #clean build
-xcodebuild -project out/base.xcodeproj -target chromium_base -arch i386 -sdk iphonesimulator6.0 clean build
-xcodebuild -project out/wd_core.xcodeproj -target WebDriver_core -arch i386 -sdk iphonesimulator6.0 clean build
-xcodebuild -project out/wd_ext_qt.xcodeproj -target WebDriver_extension_qt_base -arch i386 -sdk iphonesimulator6.0 clean build
-xcodebuild -project out/wd_ext_qt.xcodeproj -target WebDriver_extension_qt_quick -arch i386 -sdk iphonesimulator6.0 clean build
+if [ $? -ne 0 ]; then
+    echo "ERROR: CMake configuration failed"
+    exit 1
+fi
 
-
-cd ./platform/ios/wd
-qmake wd.pro -r -spec macx-ios-clang CONFIG+=x86 CONFIG+=iphonesimulator CONFIG+=release
-make
-
+if [ "$1" == "-all" ]; then
+    echo "Building for iOS Simulator..."
+    
+    # Build individual targets for iOS
+    xcodebuild -project QtWebDriver.xcodeproj -target chromium_base \
+        -arch x86_64 -sdk iphonesimulator clean build
+    
+    xcodebuild -project QtWebDriver.xcodeproj -target WebDriver_core \
+        -arch x86_64 -sdk iphonesimulator clean build
+    
+    xcodebuild -project QtWebDriver.xcodeproj -target WebDriver_extension_qt_base \
+        -arch x86_64 -sdk iphonesimulator clean build
+    
+    xcodebuild -project QtWebDriver.xcodeproj -target WebDriver_extension_qt_quick \
+        -arch x86_64 -sdk iphonesimulator clean build
+    
+    echo "Build completed. Check out/ios/release for binaries."
+else
+    echo "Project configured for iOS. To build, run:"
+    echo "  cd $BUILD_DIR"
+    echo "  xcodebuild -project QtWebDriver.xcodeproj -target <target> -sdk iphonesimulator"
+    echo "Or open the Xcode project:"
+    echo "  open $BUILD_DIR/QtWebDriver.xcodeproj"
 fi

@@ -1,74 +1,72 @@
 #!/usr/bin/env bash
-output_gen=$1
-platform=$2
-mode=$3
-qt_dir=$4
 
-root_dir=`pwd`
-if [ -z $output_gen ];
-then
-  output_gen=`pwd`/out
-  platform="desktop"
+# CMake build script for QtWebDriver
+# Usage: ./build_cmake.sh [output_dir] [build_type] [qt_version]
+
+output_dir=$1
+build_type=$2
+qt_version=$3
+
+root_dir=$(pwd)
+
+# Set defaults
+if [ -z "$output_dir" ]; then
+    output_dir="$root_dir/out"
 fi
 
-output_gen=`readlink -m ${output_gen}`
-base_output_gen=`dirname ${output_gen}`
-
-if [ -z $platform ];
-then
-  platforms="desktop"
-else
-  platforms=$platform
-fi
-if [ -z $mode ];
-then
-  modes="release"
-else
-  modes=$mode
+if [ -z "$build_type" ]; then
+    build_type="Release"
 fi
 
-OUT_STATIC_LIB_FILES="libchromium_base.a libWebDriver_core.a libWebDriver_extension_qt_base.a libWebDriver_extension_qt_web.a libWebDriver_extension_qt_quick.a libWebDriver_extension_qt_quick_web.a"
-OUT_SHARED_LIB_FILES="libchromium_base.so libWebDriver_core.so libWebDriver_extension_qt_base.so libWebDriver_extension_qt_web.so libWebDriver_extension_qt_quick.so libWebDriver_extension_qt_quick_web.so libAndroidWD_QML.so libAndroidWD_Widgets.so"
-OUT_BIN_FILES="WebDriver WebDriver_noWebkit WebDriver_noWebkit_sharedLibs"
+if [ -z "$qt_version" ]; then
+    qt_version="6"
+fi
 
-#generate wdversion.cc
+output_dir=$(readlink -m "${output_dir}")
+base_output_dir=$(dirname "${output_dir}")
+
+# Ensure output directory exists
+mkdir -p "$output_dir"
+
+# Generate wdversion.cc
+echo "Generating version info..."
 python3 generate_wdversion.py
 
-for platform in $platforms
-do
-  for mode in $modes
-  do
-    cd $root_dir
+# Configure CMake
+echo "Configuring CMake..."
+cd "$output_dir" || exit 1
 
-    OUTPUT_DIR=${output_gen}/$platform/$mode
-    OUTPUT_DIR_OUT=${OUTPUT_DIR}/Default
-    DIST_DIR=${output_gen}/dist/$platform/$mode
+cmake "$root_dir" \
+    -DCMAKE_BUILD_TYPE="$build_type" \
+    -DQT_VERSION="$qt_version" \
+    -DCMAKE_INSTALL_PREFIX="$output_dir/install" \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DBUILD_TESTS=ON
 
-    gyp --depth . -G output_dir=. -D platform=$platform -D mode=$mode -D ROOT_PATH=${base_output_gen} -D QT_DIR=${qt_dir} --generator-output=${output_gen}/$platform/$mode wd.gyp
-    [ $? -ne 0 ] && exit 1
-    cd $OUTPUT_DIR
-    [ $? -ne 0 ] && echo "**** ERROR: Can't access to $OUTPUT_DIR" && exit 1
-    make
-    [ $? -ne 0 ] && exit 1
-    mkdir -p ${DIST_DIR}/{bin,libs,h,Test}
-    [ $? -ne 0 ] && echo "**** ERROR: Can't create $DIST_DIR" && exit 1
+if [ $? -ne 0 ]; then
+    echo "ERROR: CMake configuration failed"
+    exit 1
+fi
 
-    # copy libraries
-    for file in $OUT_STATIC_LIB_FILES; do cp -f $OUTPUT_DIR_OUT/$file $DIST_DIR/libs 2>/dev/null; done
-    for file in $OUT_SHARED_LIB_FILES; do cp -f $OUTPUT_DIR_OUT/lib.target/$file $DIST_DIR/libs 2>/dev/null; done
+# Build
+echo "Building..."
+cmake --build . --parallel $(nproc)
 
-    # copy headers
-    cp -rf $root_dir/inc/* $DIST_DIR/h 2>/dev/null;
-    cp -rf $root_dir/src/Test $DIST_DIR 2>/dev/null;
+if [ $? -ne 0 ]; then
+    echo "ERROR: Build failed"
+    exit 1
+fi
 
-    # copy test binaries
-    for file in $OUT_BIN_FILES
-    do
-      if [ -f $OUTPUT_DIR_OUT/$file ]
-      then
-        cp -f $OUTPUT_DIR_OUT/$file $DIST_DIR/bin 2>/dev/null
-      fi
-    done
-    
-  done
-done
+# Install
+echo "Installing to $output_dir/install..."
+cmake --install .
+
+if [ $? -ne 0 ]; then
+    echo "ERROR: Installation failed"
+    exit 1
+fi
+
+echo "Build completed successfully!"
+echo "Binaries: $output_dir/bin"
+echo "Libraries: $output_dir/lib"
+echo "Installation: $output_dir/install"

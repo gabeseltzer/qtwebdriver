@@ -1,157 +1,101 @@
 #!/usr/bin/env bash
 
+# QtWebDriver Android CMake Build Script
+# This script has been updated to use CMake instead of GYP
 
 archs=$1
 
-if [ -z $QT_DIR ]
-then
-  export QT_DIR=/opt/Qt5.2/5.2.0
+if [ -z "$QT_DIR" ]; then
+    export QT_DIR=/opt/Qt6/6.5.0
 fi
 
-export QT_VERSION=5.2.0
+export QT_VERSION=${QT_VERSION:-6.5.0}
 export ANDROID_PACKAGE=org.webdriver.qt
-export ANDROID_JAVA=`pwd`/platform/android/java/
 export ANDROID_APP_NAME=AndroidWD
-export MINISTRO="--deployment ministro"
 
-export KEY_STORE=`pwd`/platform/android/androidwd.keystore
-export ALIAS="qtwd"
-export PASSWORD="123456"
-
-if [ -z $archs ];
-then
-  archs="armv7 x86"
-  modes="release release_dbg"
+if [ -z "$archs" ]; then
+    archs="arm64-v8a x86_64"
 fi
 
-if [ -z $ANDROID_NDK_ROOT];
-then
-  export ANDROID_NDK_ROOT=/opt/android/android-ndk-r8e
+if [ -z "$ANDROID_NDK_ROOT" ]; then
+    export ANDROID_NDK_ROOT=/opt/android/ndk/latest
 fi
 
-if [ -z $ANDROID_SDK_ROOT]; 
-then
-  export ANDROID_SDK_ROOT=/opt/android/adt-bundle-linux-x86-20130522/sdk
+if [ -z "$ANDROID_SDK_ROOT" ]; then
+    export ANDROID_SDK_ROOT=/opt/android/sdk
 fi
 
 for arch in $archs
 do
-  if [ $arch = "x86" ];
-  then
-    export ANDROID_ARCH=x86
-    export ANDROID_LIB_ARCH=x86
-    export ANDROID_TOOLCHAIN_VERSION=4.7
-    export ANDROID_TOOLCHAIN=x86-4.7
-    export ANDROID_TOOL_PREFIX=i686-linux-android
-    export ANDROID_TARGET=android-10
-    export ANDROID_TOOLCHAIN_PREFIX=x86
-    export ANDROID_NDK_HOST=linux-x86
-  elif [ $arch = "armv7" ];
-  then
-    export ANDROID_ARCH=arm
-    export ANDROID_LIB_ARCH=armeabi-v7a
-    export ANDROID_TOOLCHAIN_VERSION=4.7
-    export ANDROID_TOOLCHAIN=arm-linux-androideabi-4.7
-    export ANDROID_TOOL_PREFIX=arm-linux-androideabi
-    export ANDROID_TARGET=android-10
-    export ANDROID_TOOLCHAIN_PREFIX=arm-linux-androideabi
-    export ANDROID_NDK_HOST=linux-x86
-  else
-    echo "We don't support platform " $arch
-    exit 1
-  fi
-
-  export QT_ROOT=$QT_DIR/android_$arch
-
-  export PREBUILD=$ANDROID_NDK_ROOT/toolchains/$ANDROID_TOOLCHAIN/prebuilt/linux-x86
-  export BIN=$PREBUILD/bin
-
-  export CXX=$BIN/$ANDROID_TOOL_PREFIX-g++
-  export CC=$BIN/$ANDROID_TOOL_PREFIX-gcc
-  export LINK=$BIN/$ANDROID_TOOL_PREFIX-g++
-  export AR=$BIN/$ANDROID_TOOL_PREFIX-ar
-
-  export ANDROID_DEPLOY_QT=$QT_DIR/android_$arch/bin/androiddeployqt
-
-
-  export GYP_DEFINES="OS=android"
-
-if [[ -z $modes ]];
-then
-  modes="release"
-fi
-
-  platform="android_"$arch
-
-  for mode in $modes
-  do 
-    echo "####################### Build "$arch $mode" #######################"
-
-    ./build.sh `pwd`/out $platform $mode
-
-    RETVAL=$?
-    if [ $RETVAL -ne 0 ];
-    then
-      echo "####################### Build "$arch" failed !!! #######################"
-      exit $RETVAL
+    echo "####################### Building for $arch #######################"
+    
+    # Set architecture-specific variables
+    case "$arch" in
+        arm64-v8a)
+            ANDROID_ABI="arm64-v8a"
+            QT_ANDROID_DIR="$QT_DIR/android_arm64_v8a"
+            ;;
+        armeabi-v7a)
+            ANDROID_ABI="armeabi-v7a"
+            QT_ANDROID_DIR="$QT_DIR/android_armv7"
+            ;;
+        x86_64)
+            ANDROID_ABI="x86_64"
+            QT_ANDROID_DIR="$QT_DIR/android_x86_64"
+            ;;
+        x86)
+            ANDROID_ABI="x86"
+            QT_ANDROID_DIR="$QT_DIR/android_x86"
+            ;;
+        *)
+            echo "Unsupported architecture: $arch"
+            exit 1
+            ;;
+    esac
+    
+    # Generate version info
+    python3 generate_wdversion.py
+    
+    # Create build directory
+    BUILD_DIR="out/android_${arch}/release"
+    mkdir -p "$BUILD_DIR"
+    
+    echo "Configuring with CMake for Android $arch..."
+    cd "$BUILD_DIR" || exit 1
+    
+    cmake ../../.. \
+        -DCMAKE_SYSTEM_NAME=Android \
+        -DCMAKE_ANDROID_NDK="$ANDROID_NDK_ROOT" \
+        -DCMAKE_ANDROID_ARCH_ABI="$ANDROID_ABI" \
+        -DCMAKE_ANDROID_STL_TYPE=c++_shared \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DQT_VERSION=6 \
+        -DCMAKE_PREFIX_PATH="$QT_ANDROID_DIR" \
+        -DCMAKE_FIND_ROOT_PATH="$QT_ANDROID_DIR" \
+        -DQT_HOST_PATH="$QT_DIR/gcc_64" \
+        -DANDROID=ON \
+        -DWD_CONFIG_WEBKIT=OFF \
+        -DWD_CONFIG_QUICK=ON
+    
+    if [ $? -ne 0 ]; then
+        echo "ERROR: CMake configuration failed for $arch"
+        exit 1
     fi
     
-    dist_dir=`pwd`/out/bin/$platform/$mode
-    export BINARY_PATH_WIDGETS=$dist_dir/libAndroidWD_Widgets.so
-    export BINARY_PATH_QML=$dist_dir/libAndroidWD_QML.so
-
-    #clean android directory
-    rm -rf $dist_dir/android
-
+    # Build
+    echo "Building for $arch..."
+    cmake --build . --parallel $(nproc)
     
-    echo "####################### Create apk "$arch" "$mode" #######################"
-    mkdir -p $dist_dir/android/libs/$ANDROID_LIB_ARCH
-    cp $BINARY_PATH_WIDGETS $dist_dir/android/libs/$ANDROID_LIB_ARCH
-
-    if [ $mode = "release" ]
-    then
-      export RELEASE_ARG="--sign "$KEY_STORE" "$ALIAS" --storepass "$PASSWORD
-      echo $RELEASE_ARG
-    fi
-
-    export ANDROID_JSON_CONFIG=$dist_dir/android/android_config.json 
-
-
-    echo "####################### Widgets #######################"
-    export BINARY_PATH=$BINARY_PATH_WIDGETS
-    python generate_android_json.py
-
-    $ANDROID_DEPLOY_QT --output $dist_dir/android --input $ANDROID_JSON_CONFIG --verbose $MINISTRO $RELEASE_ARG 
     RETVAL=$?
-    if [ $RETVAL -ne 0 ];
-    then
-      echo "####################### androiddeployqt widgets error!!! #######################"
-      echo $RETVAL
-      exit $RETVAL
+    if [ $RETVAL -ne 0 ]; then
+        echo "####################### Build $arch failed !!! #######################"
+        exit $RETVAL
     fi
-
-    cp $dist_dir/android/bin/QtApp-release.apk $dist_dir/AndroidWD_Widgets.apk
-    rm -rf $dist_dir/android
-
-
-    echo "####################### QML #######################"
-    mkdir -p $dist_dir/android/libs/$ANDROID_LIB_ARCH
-    cp $BINARY_PATH_QML $dist_dir/android/libs/$ANDROID_LIB_ARCH
-    export BINARY_PATH=$BINARY_PATH_QML
-    python generate_android_json.py
-
-    $ANDROID_DEPLOY_QT --output $dist_dir/android --input $ANDROID_JSON_CONFIG --verbose $MINISTRO $RELEASE_ARG 
-    RETVAL=$?
-    if [ $RETVAL -ne 0 ];
-    then
-      echo "####################### androiddeployqt qml error!!! #######################"
-      echo $RETVAL
-      exit $RETVAL
-    fi
-
-    cp $dist_dir/android/bin/QtApp-release.apk $dist_dir/AndroidWD_QML.apk
-    rm -rf $dist_dir/android
-
-  done
-
+    
+    echo "####################### Build $arch completed successfully #######################"
+    
+    cd - > /dev/null
 done
+
+echo "All Android builds completed successfully!"
+echo "Check out/android_*/release/ directories for build artifacts"

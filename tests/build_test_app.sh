@@ -1,22 +1,54 @@
 #!/bin/bash
 
-# Build Qt Test Application with Embedded QtWebDriver
+# Build Qt Test Application with Embedded QtWebDriver (CMake version)
 
-QT_PATH=/opt/qt/6.8.2/gcc_64
-WD_ROOT=/workspaces/qtwebdriver
-WD_BUILD=$WD_ROOT/out/desktop/release/Default
+QT_PATH=${QT_PATH:-/opt/qt/6.8.2/gcc_64}
+WD_ROOT=${WD_ROOT:-/workspaces/qtwebdriver}
+BUILD_DIR=${BUILD_DIR:-$WD_ROOT/build}
 
 echo "Building Qt Test Application with Embedded QtWebDriver..."
 echo "Qt path: $QT_PATH"
 echo "WebDriver root: $WD_ROOT"
+echo "Build directory: $BUILD_DIR"
+
+# Find the actual library directory (VSCode CMake extension uses nested directories)
+LIB_DIR=""
+if [ -f "$BUILD_DIR/lib/libWebDriver_core.a" ]; then
+    LIB_DIR="$BUILD_DIR/lib"
+else
+    # Search for libraries in VSCode CMake extension build directories
+    FOUND_LIB=$(find "$BUILD_DIR" -name "libWebDriver_core.a" -type f 2>/dev/null | head -1)
+    if [ -n "$FOUND_LIB" ]; then
+        LIB_DIR=$(dirname "$FOUND_LIB")
+        echo "Found libraries in: $LIB_DIR"
+    fi
+fi
+
+# Verify libraries exist
+if [ -z "$LIB_DIR" ] || [ ! -f "$LIB_DIR/libWebDriver_core.a" ]; then
+    echo "Error: QtWebDriver libraries not found"
+    echo "Please build QtWebDriver first using VSCode CMake extension or run:"
+    echo "  cd $WD_ROOT && ./build.sh"
+    exit 1
+fi
 
 # Set Qt environment
 export PATH=$QT_PATH/bin:$PATH
 export LD_LIBRARY_PATH=$QT_PATH/lib:$LD_LIBRARY_PATH
 
+# Determine moc location
+if [ -f "$QT_PATH/libexec/moc" ]; then
+    MOC_PATH="$QT_PATH/libexec/moc"
+elif [ -f "$QT_PATH/bin/moc" ]; then
+    MOC_PATH="$QT_PATH/bin/moc"
+else
+    echo "Error: moc not found in $QT_PATH"
+    exit 1
+fi
+
 # Generate moc file
 echo "Running moc..."
-$QT_PATH/libexec/moc test_qt_app.cpp -o test_qt_app.moc
+$MOC_PATH test_qt_app.cpp -o test_qt_app.moc
 
 # Compile with QtWebDriver support
 echo "Compiling with QtWebDriver libraries..."
@@ -39,16 +71,15 @@ g++ -std=c++17 -fPIC \
     -I$WD_ROOT/inc \
     -I$WD_ROOT/inc/commands \
     -I$WD_ROOT/inc/extension_qt \
-    -I$WD_ROOT/inc/build \
     -I$WD_ROOT/src/webdriver \
     test_qt_app.cpp \
     -o test_qt_app \
-    -L$QT_PATH/lib \
-    -L$WD_BUILD \
-    $WD_BUILD/libWebDriver_core.a \
-    $WD_BUILD/libWebDriver_extension_qt_base.a \
-    $WD_BUILD/libtest_widgets.a \
-    $WD_BUILD/libchromium_base.a \
+    -L"$QT_PATH/lib" \
+    -L"$LIB_DIR" \
+    "$LIB_DIR/libWebDriver_core.a" \
+    "$LIB_DIR/libWebDriver_extension_qt_base.a" \
+    "$LIB_DIR/libtest_widgets.a" \
+    "$LIB_DIR/libchromium_base.a" \
     -lQt6Core \
     -lQt6Gui \
     -lQt6Widgets \

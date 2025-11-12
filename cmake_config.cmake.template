@@ -1,0 +1,30 @@
+# QtWebDriver CMake Configuration Template
+#
+# Copy this file to cmake_config.cmake and customize for your environment
+#
+# Example:
+#   cp cmake_config.cmake.template cmake_config.cmake
+#   # Edit cmake_config.cmake with your Qt paths and build options
+#   mkdir build && cd build
+#   cmake .. -C ../cmake_config.cmake
+
+# Qt version selection
+set(QT_VERSION "6" CACHE STRING "Qt version to use (5 or 6)")
+
+# Qt paths (if not in standard locations)
+# set(CMAKE_PREFIX_PATH "/opt/qt/6.8.2/gcc_64" CACHE PATH "Qt installation path")
+
+# Build configuration options
+set(WD_CONFIG_QWIDGET_BASE ON CACHE BOOL "Enable QWidget support")
+set(WD_CONFIG_WEBKIT OFF CACHE BOOL "Enable WebKit support")
+set(WD_CONFIG_QUICK ON CACHE BOOL "Enable Qt Quick support")
+set(WD_CONFIG_PLAYER OFF CACHE BOOL "Enable player support")
+set(WD_CONFIG_ONE_KEYRELEASE OFF CACHE BOOL "Enable one key release")
+set(WD_BUILD_MONGOOSE ON CACHE BOOL "Build with mongoose")
+set(BUILD_TESTS ON CACHE BOOL "Build test executables")
+
+# Build type
+set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type")
+
+# Installation prefix
+# set(CMAKE_INSTALL_PREFIX "/usr/local" CACHE PATH "Installation prefix")
