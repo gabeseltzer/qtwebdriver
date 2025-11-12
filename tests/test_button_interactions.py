@@ -10,33 +10,36 @@ Make sure the test_qt_app is running before executing this script.
 """
 
 import time
+from typing import Any
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chromium.options import ChromiumOptions
+from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.remote.webelement import WebElement
 
 
 class QtWebDriverOptions(ChromiumOptions):
     """Custom options class for QtWebDriver"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._caps = {
+        self._caps: dict[str, str] = {
             "browserName": "qt",
             "browserStartWindow": "*"  # Connect to existing window
         }
     
     @property
-    def capabilities(self):
+    def capabilities(self) -> dict[str, str]:
         return self._caps
     
-    def to_capabilities(self):
+    def to_capabilities(self) -> dict[str, str]:
         return self._caps
 
 
-def connect_to_qtwebdriver(url="http://localhost:9517"):
+def connect_to_qtwebdriver(url: str = "http://localhost:9517") -> WebDriver:
     """Connect to the QtWebDriver server"""
     print(f"Connecting to QtWebDriver at {url}...")
     
@@ -44,7 +47,7 @@ def connect_to_qtwebdriver(url="http://localhost:9517"):
     options = QtWebDriverOptions()
     
     # Create remote webdriver connection
-    driver = webdriver.Remote(
+    driver: WebDriver = webdriver.Remote(
         command_executor=url,
         options=options
     )
@@ -53,11 +56,11 @@ def connect_to_qtwebdriver(url="http://localhost:9517"):
     return driver
 
 
-def wait_for_element(driver, object_name, timeout=10):
+def wait_for_element(driver: WebDriver, object_name: str, timeout: int = 10) -> WebElement:
     """Wait for an element to be present and visible using XPath"""
     try:
         # Use XPath to find element by objectName attribute
-        xpath = f"//*[@objectName='{object_name}']"
+        xpath: str = f"//*[@objectName='{object_name}']"
         # Use find_element directly to get proper WebElement object
         element = driver.find_element(By.XPATH, xpath)
         return element
@@ -66,7 +69,7 @@ def wait_for_element(driver, object_name, timeout=10):
         raise
 
 
-def test_hello_button(driver):
+def test_hello_button(driver: WebDriver) -> None:
     """Test the 'Say Hello' button"""
     print("\n--- Testing Hello Button ---")
     
@@ -85,7 +88,7 @@ def test_hello_button(driver):
     print("✓ Result text verified")
 
 
-def test_goodbye_button(driver):
+def test_goodbye_button(driver: WebDriver) -> None:
     """Test the 'Say Goodbye' button"""
     print("\n--- Testing Goodbye Button ---")
     
@@ -102,7 +105,7 @@ def test_goodbye_button(driver):
     print("✓ Result text verified")
 
 
-def test_counter_buttons(driver):
+def test_counter_buttons(driver: WebDriver) -> None:
     """Test the counter increment/decrement buttons"""
     print("\n--- Testing Counter Buttons ---")
     
@@ -159,7 +162,7 @@ def test_counter_buttons(driver):
     print("✓ Counter reset correctly")
 
 
-def test_text_input(driver):
+def test_text_input(driver: WebDriver) -> None:
     """Test the text input and submit button"""
     print("\n--- Testing Text Input ---")
     
@@ -188,7 +191,7 @@ def test_text_input(driver):
     print("✓ Text submission verified")
 
 
-def test_clear_button(driver):
+def test_clear_button(driver: WebDriver) -> None:
     """Test the clear message button"""
     print("\n--- Testing Clear Button ---")
     
@@ -205,9 +208,9 @@ def test_clear_button(driver):
     print("✓ Message cleared successfully")
 
 
-def main():
+def main() -> int:
     """Main test execution"""
-    driver = None
+    driver: WebDriver | None = None
     
     try:
         # Connect to QtWebDriver
