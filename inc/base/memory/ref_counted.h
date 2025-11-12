@@ -97,7 +97,8 @@ class RefCounted : public subtle::RefCountedBase {
   ~RefCounted() {}
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(RefCounted<T>);
+  RefCounted(const RefCounted&) = delete;
+  RefCounted& operator=(const RefCounted&) = delete;
 };
 
 // Forward declaration.

@@ -101,7 +101,8 @@ class ThreadLocalPointer {
 
   SlotType slot_;
 
-  DISALLOW_COPY_AND_ASSIGN(ThreadLocalPointer<Type>);
+  ThreadLocalPointer(const ThreadLocalPointer&) = delete;
+  ThreadLocalPointer& operator=(const ThreadLocalPointer&) = delete;
 };
 
 class ThreadLocalBoolean {
