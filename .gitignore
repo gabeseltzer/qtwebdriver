@@ -25,3 +25,7 @@ wd.gypi
 /src/webdriver/webdriver_version.cc
 /build-*
 .DS_Store
+
+# Test application binaries
+tests/test_qt_app
+tests/test_qt_app.moc
