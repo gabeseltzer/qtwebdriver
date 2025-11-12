@@ -4,7 +4,7 @@
 **
 ****************************************************************************/
 
-// CRITICAL: Include ALL Qt headers FIRST, before any WebDriver headers!
+// Include Qt headers first
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QPushButton>

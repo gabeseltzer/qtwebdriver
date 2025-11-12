@@ -37,7 +37,6 @@ g++ -std=c++17 -fPIC \
     -I$QT_PATH/include/QtNetwork \
     -I$QT_PATH/include/QtConcurrent \
     -I$WD_ROOT/inc \
-    -I$WD_ROOT/inc/base \
     -I$WD_ROOT/inc/commands \
     -I$WD_ROOT/inc/extension_qt \
     -I$WD_ROOT/inc/build \

@@ -27,7 +27,20 @@
 #ifndef BASE_TIME_TIME_H_
 #define BASE_TIME_TIME_H_
 
+// Qt 6 / C++17 compatibility: Ensure system time.h is included properly
+// before any C++ headers that might pull in <ctime>
+#ifndef _TIME_H
 #include <time.h>
+#endif
+
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+#ifndef _SYS_TIME_H
+#include <sys/time.h>
+#endif
+#ifndef _UNISTD_H
+#include <unistd.h>
+#endif
+#endif
 
 #include <iosfwd>
 
@@ -41,10 +54,11 @@
 #undef TYPE_BOOL
 #endif
 
-#if defined(OS_POSIX)
-#include <unistd.h>
-#include <sys/time.h>
-#endif
+// POSIX time headers already included above for Qt 6 compatibility
+// #if defined(OS_POSIX)
+// #include <unistd.h>
+// #include <sys/time.h>
+// #endif
 
 #if defined(OS_WIN)
 // For FILETIME in FromFileTime, until it moves to a new converter class.
